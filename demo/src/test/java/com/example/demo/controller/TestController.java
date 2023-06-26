@@ -1,30 +1,25 @@
-package com.example.demo.Controller;
+package com.example.demo.controller;
 
-import com.example.demo.utils.JsonUtils;
-import com.example.demo.Controller.Models.User;
+import com.example.demo.models.User;
 import com.example.demo.service.UserService;
-import org.junit.jupiter.api.BeforeEach;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
-
-
-import org.springframework.web.bind.annotation.GetMapping;
-
-
 @SpringBootTest
 @AutoConfigureMockMvc
-public class TestController{
+public class TestController {
 
     @Autowired
     private MockMvc mockMvc;
@@ -32,14 +27,12 @@ public class TestController{
     @Autowired
     private UserService userService;
 
-    @BeforeEach
-    public void setup(){
-
-    }
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Test
-    public void testCreateUser() throws Exception{
-        User user=new User();
+    public void testCreateUser() throws Exception {
+        User user = new User();
         user.setFirstName("John");
         user.setLastName("Doe");
         user.setAge(30);
@@ -47,18 +40,25 @@ public class TestController{
 
         // invoke create user endpoint
 
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/test/users")
-                .contentType("application/json")
-                .content(JsonUtils.toJson(user))
-                .andExpect(status()).isOk())
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.post("/test/users")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsBytes(user));
+
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(1))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value("John"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.lastName").value("Doe"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.age").value(30))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.occupation").value("Engineer"))
                 .andReturn();
 
         //Validate the response and check if the user was created
-        User createdUser= userService.getuserById(1L);
+        User createdUser = userService.getUserById(1L);
         assertThat(createdUser).isNotNull();
         assertThat(createdUser.getFirstName()).isEqualTo("John");
         assertThat(createdUser.getLastName()).isEqualTo("Doe");
-        assertThat(createdUser.getLastName()).isEqualTo("30");
+        assertThat(createdUser.getAge()).isEqualTo(30);
         assertThat(createdUser.getOccupation()).isEqualTo("Engineer");
     }
 
@@ -69,10 +69,17 @@ public class TestController{
         userToUpdate.setOccupation("Senior Engineer");
 
         //invoke the updateUser endpoint
-        mockMvc.perform(MockMvcRequestBuilders.put("/test/users/1")
-                        .contentType("application/json")
-                        .content(JsonUtils.toJson(userToUpdate)))
-                .andExpect(status().isOk());
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.post("/test/users/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsBytes(userToUpdate));
+
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(1))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value("John"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.lastName").value("Doe"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.age").value(35))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.occupation").value("Senior Engineer"));
 
         // Validate the database to check if the user was updated
         User updatedUser = userService.getUserById(1L);
