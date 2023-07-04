@@ -8,11 +8,13 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 
 @Entity
 @Getter
 @Setter
-public class User {
+public class Developer {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -26,6 +28,6 @@ public class User {
     @Column
     private int age;
 
-    @Column
-    private String occupation;
+    @ManyToOne // pass arguments to that annotation
+    private Squad squad;
 }

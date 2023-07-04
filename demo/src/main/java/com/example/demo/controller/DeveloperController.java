@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
-import com.example.demo.models.User;
-import com.example.demo.service.UserService;
+import com.example.demo.models.Developer;
+import com.example.demo.service.DeveloperService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,33 +17,33 @@ import java.util.List;
 @RestController
 @RequestMapping("/users")
 @AllArgsConstructor
-public class ApiController {
+public class DeveloperController {
 
-    private final UserService userService;
+    private final DeveloperService developerService;
 
     @GetMapping
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+    public List<Developer> getAllUsers() {
+        return developerService.getAllUsers();
     }
 
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable long id) {
-        return userService.getUserById(id);
+    public Developer getUserById(@PathVariable long id) {
+        return developerService.getUserById(id);
     }
 
     @PostMapping
-    public User createUser(@RequestBody User user) {
-        return userService.createUser(user);
+    public Developer createUser(@RequestBody Developer developer) {
+        return developerService.createUser(developer);
     }
 
     @PutMapping("/{id}")
-    public User updateUser(@PathVariable long id, @RequestBody User user) {
-        return userService.updateUser(id, user);
+    public Developer updateUser(@PathVariable long id, @RequestBody Developer developer) {
+        return developerService.updateUser(id, developer);
     }
 
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable long id) {
-        userService.deleteUser(id);
+        developerService.deleteUser(id);
     }
 
 }
