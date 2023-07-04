@@ -1,8 +1,10 @@
 package com.example.demo.controller;
 
-import com.example.demo.models.User;
-import com.example.demo.service.UserService;
+import com.example.demo.models.Developer;
+import com.example.demo.repo.DeveloperRepo;
+import com.example.demo.service.DeveloperService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -19,30 +21,36 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class TestController {
+public class DeveloperControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Autowired
-    private UserService userService;
+    private DeveloperRepo developerRepo;
+
+    @Autowired
+    private DeveloperService developerService;
 
     @Autowired
     private ObjectMapper objectMapper;
 
+    @BeforeEach
+    void setup() {
+        developerRepo.deleteAll();
+    }
+
     @Test
     public void testCreateUser() throws Exception {
-        User user = new User();
-        user.setFirstName("John");
-        user.setLastName("Doe");
-        user.setAge(30);
-        user.setOccupation("Engineer");
+        Developer developer = new Developer();
+        developer.setFirstName("John");
+        developer.setLastName("Doe");
+        developer.setAge(30);
 
         // invoke create user endpoint
-
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.post("/test/users")
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.post("/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsBytes(user));
+                .content(objectMapper.writeValueAsBytes(developer));
 
         mockMvc.perform(requestBuilder)
                 .andExpect(status().isOk())
@@ -54,24 +62,24 @@ public class TestController {
                 .andReturn();
 
         //Validate the response and check if the user was created
-        User createdUser = userService.getUserById(1L);
-        assertThat(createdUser).isNotNull();
-        assertThat(createdUser.getFirstName()).isEqualTo("John");
-        assertThat(createdUser.getLastName()).isEqualTo("Doe");
-        assertThat(createdUser.getAge()).isEqualTo(30);
-        assertThat(createdUser.getOccupation()).isEqualTo("Engineer");
+        Developer createdDeveloper = developerService.getUserById(1L);
+        assertThat(createdDeveloper).isNotNull();
+        assertThat(createdDeveloper.getFirstName()).isEqualTo("John");
+        assertThat(createdDeveloper.getLastName()).isEqualTo("Doe");
+        assertThat(createdDeveloper.getAge()).isEqualTo(30);
     }
 
     @Test
     public void testUpdateUser() throws Exception {
-        User userToUpdate = userService.getUserById(1L);
-        userToUpdate.setAge(35);
-        userToUpdate.setOccupation("Senior Engineer");
+        // GIVEN
+        Developer developerToUpdate = developerService.getUserById(1L);
+        developerToUpdate.setAge(35);
 
         //invoke the updateUser endpoint
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.post("/test/users/1")
+        // WHEN
+        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.post("/users/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsBytes(userToUpdate));
+                .content(objectMapper.writeValueAsBytes(developerToUpdate));
 
         mockMvc.perform(requestBuilder)
                 .andExpect(status().isOk())
@@ -82,9 +90,9 @@ public class TestController {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.occupation").value("Senior Engineer"));
 
         // Validate the database to check if the user was updated
-        User updatedUser = userService.getUserById(1L);
-        assertThat(updatedUser.getAge()).isEqualTo(35);
-        assertThat(updatedUser.getOccupation()).isEqualTo("Senior Engineer");
+        // THEN
+        Developer updatedDeveloper = developerService.getUserById(1L);
+        assertThat(updatedDeveloper.getAge()).isEqualTo(35);
     }
 
     @Test
