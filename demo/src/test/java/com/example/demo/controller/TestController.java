@@ -53,6 +53,7 @@ public class TestController {
        // User user = new User();
 
         User user = generateRandomUser();
+        
        /* user.setFirstName("John");
         user.setLastName("Doe");
         user.setAge(30);
@@ -65,13 +66,13 @@ public class TestController {
 
         HttpEntity<User> requestEntity = new HttpEntity<>(user, headers);
         ResponseEntity<User> responseEntity = restTemplate.exchange(
-                createURLWithPort("/test/users"),
+                "/users",
                 HttpMethod.POST,
                 requestEntity,
                 User.class
         );
 
-        //assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
+        assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
         User createdUser = responseEntity.getBody();
 
         // Validate the response and check if the user was created
@@ -84,10 +85,7 @@ public class TestController {
 
     }
 
-    private String createURLWithPort(String uri) {
-        return "http://localhost:" + port + "/users" +uri;
 
-    }
 
 }
 
