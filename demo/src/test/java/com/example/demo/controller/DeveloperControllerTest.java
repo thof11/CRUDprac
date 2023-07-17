@@ -1,8 +1,9 @@
 package com.example.demo.controller;
 
 
-import com.example.demo.models.User;
-import com.example.demo.service.UserService;
+import com.example.demo.models.Developer;
+import com.example.demo.service.DeveloperService;
+import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,18 +15,16 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import com.github.javafaker.Faker;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class TestController {
+public class DeveloperControllerTest {
 
 
     @Autowired
-    private UserService userService;
+    private DeveloperService developerService;
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -34,25 +33,24 @@ public class TestController {
     private int port;
 
     @BeforeEach
-    public void setup(){
+    public void setup() {
         // Clean up the database before each test
-        userService.deleteAllUsers();
+        developerService.deleteAllUsers();
     }
 
-    private User generateRandomUser(){
-        User user = new User();
+    private Developer generateRandomUser() {
+        Developer user = new Developer();
         user.setFirstName(Faker.instance().name().firstName());
         user.setLastName(Faker.instance().name().lastName());
         user.setAge(Faker.instance().number().randomDigit());
-        user.setOccupation(Faker.instance().job().title());
         return user;
     }
 
     @Test
     public void testCreateUser() {
-       // User user = new User();
+        // User user = new User();
 
-        User user = generateRandomUser();
+        Developer user = generateRandomUser();
        /* user.setFirstName("John");
         user.setLastName("Doe");
         user.setAge(30);
@@ -63,16 +61,16 @@ public class TestController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<User> requestEntity = new HttpEntity<>(user, headers);
-        ResponseEntity<User> responseEntity = restTemplate.exchange(
+        HttpEntity<Developer> requestEntity = new HttpEntity<>(user, headers);
+        ResponseEntity<Developer> responseEntity = restTemplate.exchange(
                 createURLWithPort("/test/users"),
                 HttpMethod.POST,
                 requestEntity,
-                User.class
+                Developer.class
         );
 
         //assertThat(responseEntity.getStatusCodeValue()).isEqualTo(200);
-        User createdUser = responseEntity.getBody();
+        Developer createdUser = responseEntity.getBody();
 
         // Validate the response and check if the user was created
 
@@ -80,12 +78,11 @@ public class TestController {
         assertThat(createdUser.getFirstName()).isEqualTo(user.getFirstName());
         assertThat(createdUser.getLastName()).isEqualTo(user.getLastName());
         assertThat(createdUser.getAge()).isEqualTo(user.getAge());
-        assertThat(createdUser.getOccupation()).isEqualTo(user.getOccupation());
 
     }
 
     private String createURLWithPort(String uri) {
-        return "http://localhost:" + port + "/users" +uri;
+        return "http://localhost:" + port + "/users" + uri;
 
     }
 
