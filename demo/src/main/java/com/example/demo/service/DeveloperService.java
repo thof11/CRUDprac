@@ -39,4 +39,8 @@ public class DeveloperService {
         Developer developer = getUserById(id);
         developerRepo.delete(developer);
     }
+
+    public void deleteAllUsers() {
+        developerRepo.deleteAll();
+    }
 }
