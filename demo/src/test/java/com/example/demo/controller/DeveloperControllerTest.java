@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -29,16 +28,13 @@ public class DeveloperControllerTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
-    @LocalServerPort
-    private int port;
-
     @BeforeEach
     public void setup() {
         // Clean up the database before each test
         developerService.deleteAllUsers();
     }
 
-    private Developer generateRandomUser() {
+    private Developer generateRandomDeveloper() {
         Developer user = new Developer();
         user.setFirstName(Faker.instance().name().firstName());
         user.setLastName(Faker.instance().name().lastName());
@@ -50,7 +46,7 @@ public class DeveloperControllerTest {
     public void testCreateUser() {
         // User user = new User();
 
-        Developer user = generateRandomUser();
+        Developer user = generateRandomDeveloper();
        /* user.setFirstName("John");
         user.setLastName("Doe");
         user.setAge(30);
@@ -63,7 +59,7 @@ public class DeveloperControllerTest {
 
         HttpEntity<Developer> requestEntity = new HttpEntity<>(user, headers);
         ResponseEntity<Developer> responseEntity = restTemplate.exchange(
-                createURLWithPort("/test/users"),
+                "/users",
                 HttpMethod.POST,
                 requestEntity,
                 Developer.class
@@ -78,11 +74,6 @@ public class DeveloperControllerTest {
         assertThat(createdUser.getFirstName()).isEqualTo(user.getFirstName());
         assertThat(createdUser.getLastName()).isEqualTo(user.getLastName());
         assertThat(createdUser.getAge()).isEqualTo(user.getAge());
-
-    }
-
-    private String createURLWithPort(String uri) {
-        return "http://localhost:" + port + "/users" + uri;
 
     }
 
