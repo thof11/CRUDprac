@@ -3,6 +3,8 @@ package com.example.demo.controller;
 import com.example.demo.models.Developer;
 import com.example.demo.service.DeveloperService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,28 +24,34 @@ public class DeveloperController {
     private final DeveloperService developerService;
 
     @GetMapping
-    public List<Developer> getAllUsers() {
-        return developerService.getAllUsers();
+    public ResponseEntity<List<Developer>> getAllDevelopers() {
+        return new ResponseEntity<>(developerService.getAllDevelopers(), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public Developer getUserById(@PathVariable long id) {
-        return developerService.getUserById(id);
+    public ResponseEntity<Developer> getDeveloperById(@PathVariable long id) {
+        return new ResponseEntity<>(developerService.getDeveloperById(id), HttpStatus.OK);
     }
 
     @PostMapping
-    public Developer createUser(@RequestBody Developer developer) {
-        return developerService.createUser(developer);
+    public ResponseEntity<Developer> createDeveloper(@PathVariable Developer developer) {
+        return new ResponseEntity<>(developerService.createDeveloper(developer), HttpStatus.OK);
     }
 
     @PutMapping("/{id}")
-    public Developer updateUser(@PathVariable long id, @RequestBody Developer developer) {
-        return developerService.updateUser(id, developer);
+    public ResponseEntity<Developer> updateDeveloper(@PathVariable long id, @RequestBody Developer developer) {
+        return new ResponseEntity<>(developerService.updateDeveloper(id, developer), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable long id) {
-        developerService.deleteUser(id);
+    public ResponseEntity<Developer> deleteDeveloper(@PathVariable long id) {
+        developerService.deleteDeveloper(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+    @DeleteMapping
+    public ResponseEntity<Developer> deleteAllDeveloper(@PathVariable long id) {
+        developerService.deleteAllDevelopers();
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
 }
