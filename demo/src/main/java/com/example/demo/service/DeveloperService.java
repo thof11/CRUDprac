@@ -40,10 +40,7 @@ public class DeveloperService {
         developerRepo.delete(developer);
     }
 
-    public List<Developer> deleteAllDevelopers() {
+    public void deleteAllDevelopers() {
         developerRepo.deleteAll();
-
-        return null;
-
     }
 }

@@ -29,7 +29,7 @@ public class Developer {
     private int age;
 
     @Column
-    private String Occupation;
+    private String occupation;
 
     @ManyToOne // pass arguments to that annotation
     private Squad squad;

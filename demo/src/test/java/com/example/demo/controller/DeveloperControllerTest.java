@@ -2,28 +2,28 @@ package com.example.demo.controller;
 
 
 import com.example.demo.models.Developer;
-import com.example.demo.service.DeveloperService;
+import com.example.demo.repo.DeveloperRepo;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 
-import java.util.Random;
-import java.util.List;
-
-import static com.example.demo.service.DeveloperService.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DeveloperControllerTest {
 
-
     @Autowired
-    private DeveloperService developerService;
+    private DeveloperRepo developerRepo;
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -31,7 +31,7 @@ public class DeveloperControllerTest {
     @BeforeEach
     public void setup() {
         // Clean up the database before each test
-        developerService.deleteAllDevelopers();
+        developerRepo.deleteAll();
     }
 
     private Developer generateRandomDeveloper() {
@@ -44,13 +44,7 @@ public class DeveloperControllerTest {
 
     @Test
     public void testCreateDeveloper() {
-        // User user = new User();
-
         Developer developer = generateRandomDeveloper();
-       /* user.setFirstName("John");
-        user.setLastName("Doe");
-        user.setAge(30);
-        user.setOccupation("Engineer"); */
 
         // invoke create user endpoint
 
@@ -71,36 +65,20 @@ public class DeveloperControllerTest {
         // Validate the response and check if the user was created
 
         assertThat(createdDeveloper).isNotNull();
-        assertThat(createdDeveloper.getFirstName()).isEqualTo(createdDeveloper.getFirstName());
-        assertThat(createdDeveloper.getLastName()).isEqualTo(createdDeveloper.getLastName());
-        assertThat(createdDeveloper.getAge()).isEqualTo(createdDeveloper.getAge());
+        assertThat(createdDeveloper.getFirstName()).isEqualTo(developer.getFirstName());
+        assertThat(createdDeveloper.getLastName()).isEqualTo(developer.getLastName());
+        assertThat(createdDeveloper.getAge()).isEqualTo(developer.getAge());
 
     }
 
     @Test
     public void testUpdateDeveloper() {
         // Generate a random developer
-        Developer randomDeveloper = generateRandomDeveloper();
-
-        // Create the developer using REST API
-        HttpHeaders createHeaders = new HttpHeaders();
-        createHeaders.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Developer> createRequestEntity = new HttpEntity<>(randomDeveloper, createHeaders);
-        ResponseEntity<Developer> createResponseEntity = restTemplate.exchange(
-                "/users",
-                HttpMethod.POST,
-                createRequestEntity,
-                Developer.class
-        );
-        Developer createdDeveloper = createResponseEntity.getBody();
+        Developer createdDeveloper = generateRandomDeveloper();
+        developerRepo.save(createdDeveloper);
 
         // Generate updated details for the developer
-        Faker faker = new Faker();
-        Developer updatedDeveloper = new Developer();
-        updatedDeveloper.setId(createdDeveloper.getId());
-        updatedDeveloper.setFirstName(faker.name().firstName());
-        updatedDeveloper.setLastName(faker.name().lastName());
-        updatedDeveloper.setAge(faker.number().randomDigit());
+        Developer updatedDeveloper = generateRandomDeveloper();
 
         // Update the developer using REST API
         HttpHeaders updateHeaders = new HttpHeaders();
@@ -124,21 +102,9 @@ public class DeveloperControllerTest {
 
 
     @Test
-    public void testDeleteDeveloper(){
+    public void testDeleteDeveloper() {
         // Generate a random developer
-        Developer randomDeveloper = generateRandomDeveloper();
-
-        // Create the developer using REST API
-        HttpHeaders createHeaders = new HttpHeaders();
-        createHeaders.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Developer> createRequestEntity = new HttpEntity<>(randomDeveloper, createHeaders);
-        ResponseEntity<Developer> createResponseEntity = restTemplate.exchange(
-                "/users",
-                HttpMethod.POST,
-                createRequestEntity,
-                Developer.class
-        );
-        Developer createdDeveloper = createResponseEntity.getBody();
+        Developer createdDeveloper = developerRepo.save(generateRandomDeveloper());
 
         // Delete the developer using REST API
         HttpHeaders deleteHeaders = new HttpHeaders();
@@ -152,28 +118,9 @@ public class DeveloperControllerTest {
         );
 
         assertThat(deleteResponseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-
-        ResponseEntity<Void> getResponseEntity = restTemplate.exchange(
-                "/users/"+ createdDeveloper.getId(),
-                HttpMethod.GET,
-                null,
-                Void.class
-        );
-
-
-        assertThat(getResponseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-
-
-
-
-
-
-
+        assertThat(developerRepo.findById(createdDeveloper.getId())).isEmpty();
     }
-
-
 }
-
 
 
         /*
