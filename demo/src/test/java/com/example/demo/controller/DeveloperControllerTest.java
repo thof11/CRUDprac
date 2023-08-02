@@ -2,7 +2,9 @@ package com.example.demo.controller;
 
 
 import com.example.demo.models.Developer;
+import com.example.demo.models.Squad;
 import com.example.demo.repo.DeveloperRepo;
+import com.example.demo.repo.SquadRepo;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,8 +17,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
+// import static org.assertj.core.api.Assertions.assertThat;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.not;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -26,12 +32,16 @@ public class DeveloperControllerTest {
     private DeveloperRepo developerRepo;
 
     @Autowired
+    private SquadRepo squadRepo;
+
+    @Autowired
     private TestRestTemplate restTemplate;
 
     @BeforeEach
     public void setup() {
         // Clean up the database before each test
         developerRepo.deleteAll();
+        squadRepo.deleteAll();
     }
 
     private Developer generateRandomDeveloper() {
@@ -39,8 +49,24 @@ public class DeveloperControllerTest {
         developer.setFirstName(Faker.instance().name().firstName());
         developer.setLastName(Faker.instance().name().lastName());
         developer.setAge(Faker.instance().number().randomDigit());
+        developer.setDeveloperId(Faker.instance().number().randomDigit());
         return developer;
     }
+
+    private Squad generateRandomSquad(){
+        Squad squad= new Squad();
+        squad.setName(Faker.instance().name().firstName());
+        squad.setDescription(Faker.instance().name().lastName());
+
+        int minId = 1000;
+        int maxId = 9999;
+
+        long randomId = Faker.instance().number().numberBetween(minId, maxId);
+        squad.setSquadId(randomId);
+
+        return squad;
+    }
+
 
     @Test
     public void testCreateDeveloper() {
@@ -53,7 +79,7 @@ public class DeveloperControllerTest {
 
         HttpEntity<Developer> requestEntity = new HttpEntity<>(developer, headers);
         ResponseEntity<Developer> responseEntity = restTemplate.exchange(
-                "/users",
+                "/developers",
                 HttpMethod.POST,
                 requestEntity,
                 Developer.class
@@ -85,7 +111,7 @@ public class DeveloperControllerTest {
         updateHeaders.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Developer> updateRequestEntity = new HttpEntity<>(updatedDeveloper, updateHeaders);
         ResponseEntity<Developer> updateResponseEntity = restTemplate.exchange(
-                "/users/" + createdDeveloper.getId(),
+                "/developers/" + createdDeveloper.getDeveloperId(),
                 HttpMethod.PUT,
                 updateRequestEntity,
                 Developer.class
@@ -94,7 +120,7 @@ public class DeveloperControllerTest {
 
         // Assert the response
         assertThat(updatedDeveloperResponse).isNotNull();
-        assertThat(updatedDeveloperResponse.getId()).isEqualTo(createdDeveloper.getId());
+        assertThat(updatedDeveloperResponse.getDeveloperId()).isEqualTo(createdDeveloper.getDeveloperId());
         assertThat(updatedDeveloperResponse.getFirstName()).isEqualTo(updatedDeveloper.getFirstName());
         assertThat(updatedDeveloperResponse.getLastName()).isEqualTo(updatedDeveloper.getLastName());
         assertThat(updatedDeveloperResponse.getAge()).isEqualTo(updatedDeveloper.getAge());
@@ -111,77 +137,89 @@ public class DeveloperControllerTest {
         deleteHeaders.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<Developer> deleteRequestEntity = new HttpEntity<>(deleteHeaders);
         ResponseEntity<Void> deleteResponseEntity = restTemplate.exchange(
-                "/users/" + createdDeveloper.getId(),
+                "/developers/" + createdDeveloper.getDeveloperId(),
                 HttpMethod.DELETE,
                 deleteRequestEntity,
                 Void.class
         );
 
         assertThat(deleteResponseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
-        assertThat(developerRepo.findById(createdDeveloper.getId())).isEmpty();
-    }
-}
-
-
-        /*
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.post("/test/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsBytes(user));
-
-        mockMvc.perform(requestBuilder)
-                .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(1))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value("John"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.lastName").value("Doe"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.age").value(30))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.occupation").value("Engineer"))
-                .andReturn();
-
-        //Validate the response and check if the user was created
-        User createdUser = userService.getUserById(1L);
-        assertThat(createdUser).isNotNull();
-        assertThat(createdUser.getFirstName()).isEqualTo("John");
-        assertThat(createdUser.getLastName()).isEqualTo("Doe");
-        assertThat(createdUser.getAge()).isEqualTo(30);
-        assertThat(createdUser.getOccupation()).isEqualTo("Engineer");
-    }
-
-
-
-   @Test
-    public void testUpdateUser() throws Exception {
-        User userToUpdate = userService.getUserById(1L);
-        userToUpdate.setAge(35);
-        userToUpdate.setOccupation("Senior Engineer");
-
-        //invoke the updateUser endpoint
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders.post("/test/users/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsBytes(userToUpdate));
-
-        mockMvc.perform(requestBuilder)
-                .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(1))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value("John"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.lastName").value("Doe"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.age").value(35))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.occupation").value("Senior Engineer"));
-
-        // Validate the database to check if the user was updated
-        User updatedUser = userService.getUserById(1L);
-        assertThat(updatedUser.getAge()).isEqualTo(35);
-        assertThat(updatedUser.getOccupation()).isEqualTo("Senior Engineer");
+        assertThat(developerRepo.findById(createdDeveloper.getDeveloperId())).isEmpty();
     }
 
     @Test
-    public void testDeleteUser() throws Exception {
-        // Invoke the deleteUser endpoint
-        mockMvc.perform(MockMvcRequestBuilders.delete("/test/users/1"))
-                .andExpect(status().isOk());
+    public void testDeveloperAndSquadInteraction() {
+        //Create Developer
+        Developer developer = developerRepo.save(generateRandomDeveloper());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Developer> createDeveloperRequest = new HttpEntity<>(developer, headers);
+        ResponseEntity<Developer> createDeveloperResponse = restTemplate.exchange(
+                "/developers",
+                HttpMethod.POST,
+                createDeveloperRequest,
+                Developer.class
+        );
 
-        // Validate the database to check if the user was deleted
-        // You can use userService.getUserById() and assert that it throws NotFoundException
-    }*/
+        Developer createdDeveloper = createDeveloperResponse.getBody();
+        assertThat(createdDeveloper).isNotNull();
+        assertThat(createdDeveloper.getDeveloperId()).isNotNull();
+
+        //create squad
+        Squad squad = squadRepo.save(generateRandomSquad());
+        HttpEntity<Squad> createSquadRequest = new HttpEntity<>(squad, headers);
+        ResponseEntity<Squad> createSquadResponse = restTemplate.exchange(
+                "/squad",
+                HttpMethod.POST,
+                createSquadRequest,
+                Squad.class
+        );
+
+        Squad createdSquad= createSquadResponse.getBody();
+        assertThat(createdSquad).isNotNull();
+        assertThat(createdSquad.getSquadId()).isNotNull();
+
+
+        //add developer from the squad
+        HttpEntity<Void> addDeveloperToSquadRequest = new HttpEntity<>(headers);
+        ResponseEntity<Squad> addDeveloperToSquadResponse = restTemplate.exchange(
+                "/squad/"+ createdSquad.getSquadId()+"/add-developer/"+createdDeveloper.getDeveloperId(),
+                HttpMethod.PUT,
+                addDeveloperToSquadRequest,
+                Squad.class
+        );
+
+        Squad squadWithDeveloper = addDeveloperToSquadResponse.getBody();
+        assertThat(squadWithDeveloper).isNotNull();
+        MatcherAssert.assertThat(squadWithDeveloper.getDevelopers(), Matchers.hasItem(createdDeveloper));
+
+        // Remove the developer from the squad
+        HttpEntity<Void> removeDeveloperFromSquadRequest = new HttpEntity<>(headers);
+        ResponseEntity<Squad> removeDeveloperFromSquadResponse = restTemplate.exchange(
+                "/squad/" + createdSquad.getSquadId() + "/remove-developer/" + createdDeveloper.getDeveloperId(),
+                HttpMethod.PUT,
+                removeDeveloperFromSquadRequest,
+                Squad.class
+        );
+        Squad squadWithoutDeveloper = removeDeveloperFromSquadResponse.getBody();
+        assertThat(squadWithoutDeveloper).isNotNull();
+        assertThat(squadWithoutDeveloper.getDevelopers()).isNotIn(createdDeveloper);
+    }
+
+
+
+
+
+
+
+
+
+}
+
+
+
+
+
 
 
 
