@@ -30,49 +30,47 @@ public class SquadController {
     private final SquadService squadService;
 
     @GetMapping
-    public ResponseEntity<List<Squad>> getAllSquads(){
+    public ResponseEntity<List<Squad>> getAllSquads() {
         return new ResponseEntity<>(squadService.getAllSquads(), HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Squad> getSquadById(@PathVariable long squadId){
+    public ResponseEntity<Squad> getSquadById(@PathVariable("id") long squadId ) {
         return new ResponseEntity<>(squadService.getSquadById(squadId), HttpStatus.OK);
     }
 
     @PostMapping
-    public ResponseEntity<Squad> createSquad(@RequestBody Squad squad){
+    public ResponseEntity<Squad> createSquad(@RequestBody Squad squad) {
         return new ResponseEntity<>(squadService.createSquad(squad), HttpStatus.OK);
     }
 
-    @PutMapping
-    public ResponseEntity<Squad> updateSquad(@PathVariable long squadId, @RequestBody Squad squad){
-        return new ResponseEntity<>(squadService.updateSquad(squadId,squad), HttpStatus.OK);
+    @PutMapping("/{id}")
+    public ResponseEntity<Squad> updateSquad(@PathVariable("id") long squadId, @RequestBody Squad squad) {
+        return new ResponseEntity<>(squadService.updateSquad(squadId, squad), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteSquad(@PathVariable long squadId){
+    public ResponseEntity<Void> deleteSquad(@PathVariable("id") long squadId) {
         squadService.deleteSquad(squadId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @DeleteMapping
-    public ResponseEntity<Void> deleteAllSquads(@PathVariable long squadId){
+    @DeleteMapping("/deleteAll")
+    public ResponseEntity<Void> deleteAllSquads() {
         squadService.deleteAllSquads();
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PostMapping("/developers/{developerId}")
-    public ResponseEntity<Squad> createSquad(@PathVariable Long squadId, @PathVariable Long developerId) {
+    @PostMapping("{squadId}/developers/{developerId}")
+    public ResponseEntity<Squad> addDeveloperToSquad(@PathVariable Long squadId, @PathVariable Long developerId) {
         return new ResponseEntity<>(squadService.addDeveloperToSquad(squadId, developerId), HttpStatus.OK);
     }
 
-    @DeleteMapping("/developers/{developerId}")
-    public ResponseEntity<Void> deleteSquad(@PathVariable Long squadId, @PathVariable Long developerId){
-        squadService.removeDeveloperFromSquad(squadId,developerId);
+    @DeleteMapping("{squadId}/developers/{developerId}")
+    public ResponseEntity<Void> deleteSquad(@PathVariable Long squadId, @PathVariable Long developerId) {
+        squadService.removeDeveloperFromSquad(squadId, developerId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
-
-
 
 
 }

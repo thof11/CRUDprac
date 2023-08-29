@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/developers")
 @AllArgsConstructor
 public class DeveloperController {
 
@@ -31,7 +31,7 @@ public class DeveloperController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Developer> getDeveloperById(@PathVariable long developerId) {
+    public ResponseEntity<Developer> getDeveloperById(@PathVariable("id") long developerId) {
         return new ResponseEntity<>(developerService.getDeveloperById(developerId), HttpStatus.OK);
     }
 
@@ -41,17 +41,18 @@ public class DeveloperController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Developer> updateDeveloper(@PathVariable long developerId, @RequestBody Developer developer) {
+    public ResponseEntity<Developer> updateDeveloper(@PathVariable("id") long developerId, @RequestBody Developer developer) {
         return new ResponseEntity<>(developerService.updateDeveloper(developerId, developer), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDeveloper(@PathVariable long developerId) {
+    public ResponseEntity<Void> deleteDeveloper(@PathVariable("id") long developerId) {
         developerService.deleteDeveloper(developerId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
     @DeleteMapping
-    public ResponseEntity<Void> deleteAllDeveloper(@PathVariable long developerId) {
+    public ResponseEntity<Void> deleteAllDeveloper() {
         developerService.deleteAllDevelopers();
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }

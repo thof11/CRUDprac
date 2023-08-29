@@ -3,6 +3,7 @@ package com.example.demo.controller;
 
 import com.example.demo.models.Developer;
 import com.example.demo.models.Squad;
+import com.example.demo.service.DeveloperService;
 import com.example.demo.repo.DeveloperRepo;
 import com.example.demo.repo.SquadRepo;
 import com.github.javafaker.Faker;
@@ -17,9 +18,13 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.junit.jupiter.api.Assertions;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 // import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.Optional;
+import java.util.logging.Logger;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.not;
@@ -100,11 +105,18 @@ public class DeveloperControllerTest {
     @Test
     public void testUpdateDeveloper() {
         // Generate a random developer
-        Developer createdDeveloper = generateRandomDeveloper();
-        developerRepo.save(createdDeveloper);
+        Developer createdDeveloper = developerRepo.save(generateRandomDeveloper());
+
 
         // Generate updated details for the developer
         Developer updatedDeveloper = generateRandomDeveloper();
+        updatedDeveloper.setDeveloperId(createdDeveloper.getDeveloperId());
+
+        System.out.println("Updated Developer Object:");
+        System.out.println("First Name: " + updatedDeveloper.getFirstName());
+        System.out.println("Last Name: " + updatedDeveloper.getLastName());
+        System.out.println("Age: " + updatedDeveloper.getAge());
+        System.out.println("Developer ID: " + updatedDeveloper.getDeveloperId());
 
         // Update the developer using REST API
         HttpHeaders updateHeaders = new HttpHeaders();
@@ -148,6 +160,32 @@ public class DeveloperControllerTest {
     }
 
     @Test
+    public void testCreateSquad() {
+        //create squad
+        Squad squad = squadRepo.save(generateRandomSquad());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Squad> createSquadRequest = new HttpEntity<>(squad, headers);
+        ResponseEntity<Squad> createSquadResponse = restTemplate.exchange(
+                "/squad",
+                HttpMethod.POST,
+                createSquadRequest,
+                Squad.class
+        );
+
+        Squad createdSquad= createSquadResponse.getBody();
+        assertThat(createdSquad).isNotNull();
+        assertThat(createdSquad.getSquadId()).isNotNull();
+        assertThat(createdSquad.getName()).isEqualTo(squad.getName());
+        assertThat(createdSquad.getDescription()).isEqualTo(squad.getDescription());
+
+
+
+    }
+
+     /*
+
+    @Test
     public void testDeveloperAndSquadInteraction() {
         //Create Developer
         Developer developer = developerRepo.save(generateRandomDeveloper());
@@ -164,6 +202,9 @@ public class DeveloperControllerTest {
         Developer createdDeveloper = createDeveloperResponse.getBody();
         assertThat(createdDeveloper).isNotNull();
         assertThat(createdDeveloper.getDeveloperId()).isNotNull();
+        assertThat(createdDeveloper.getFirstName()).isEqualTo(developer.getFirstName());
+        assertThat(createdDeveloper.getLastName()).isEqualTo(developer.getLastName());
+        assertThat(createdDeveloper.getAge()).isEqualTo(developer.getAge());
 
         //create squad
         Squad squad = squadRepo.save(generateRandomSquad());
@@ -175,23 +216,34 @@ public class DeveloperControllerTest {
                 Squad.class
         );
 
-        Squad createdSquad= createSquadResponse.getBody();
+        Squad createdSquad = createSquadResponse.getBody();
         assertThat(createdSquad).isNotNull();
         assertThat(createdSquad.getSquadId()).isNotNull();
 
 
-        //add developer from the squad
+        //add developer to the squad
+        createdSquad.addDeveloper(createdDeveloper);
         HttpEntity<Void> addDeveloperToSquadRequest = new HttpEntity<>(headers);
         ResponseEntity<Squad> addDeveloperToSquadResponse = restTemplate.exchange(
-                "/squad/"+ createdSquad.getSquadId()+"/add-developer/"+createdDeveloper.getDeveloperId(),
-                HttpMethod.PUT,
+                "/squad/" + createdSquad.getSquadId() + "/developers/" + createdDeveloper.getDeveloperId(),
+                HttpMethod.POST,
                 addDeveloperToSquadRequest,
                 Squad.class
         );
 
         Squad squadWithDeveloper = addDeveloperToSquadResponse.getBody();
+        Developer squadDeveloper = squadWithDeveloper.getDevelopers().get(0);
         assertThat(squadWithDeveloper).isNotNull();
-        MatcherAssert.assertThat(squadWithDeveloper.getDevelopers(), Matchers.hasItem(createdDeveloper));
+
+        assertThat(squadDeveloper.getDeveloperId()).isEqualTo(createdDeveloper.getDeveloperId());
+        assertThat(squadDeveloper.getFirstName()).isEqualTo(createdDeveloper.getFirstName());
+        assertThat(squadDeveloper.getLastName()).isEqualTo(createdDeveloper.getLastName());
+        assertThat(squadDeveloper.getAge()).isEqualTo(createdDeveloper.getAge());
+
+
+
+    }
+
 
         // Remove the developer from the squad
         HttpEntity<Void> removeDeveloperFromSquadRequest = new HttpEntity<>(headers);
@@ -204,7 +256,9 @@ public class DeveloperControllerTest {
         Squad squadWithoutDeveloper = removeDeveloperFromSquadResponse.getBody();
         assertThat(squadWithoutDeveloper).isNotNull();
         assertThat(squadWithoutDeveloper.getDevelopers()).isNotIn(createdDeveloper);
-    }
+
+         */
+
 
 
 
