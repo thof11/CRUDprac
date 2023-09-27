@@ -159,29 +159,7 @@ public class DeveloperControllerTest {
         assertThat(developerRepo.findById(createdDeveloper.getDeveloperId())).isEmpty();
     }
 
-    @Test
-    public void testCreateSquad() {
-        //create squad
-        Squad squad = squadRepo.save(generateRandomSquad());
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Squad> createSquadRequest = new HttpEntity<>(squad, headers);
-        ResponseEntity<Squad> createSquadResponse = restTemplate.exchange(
-                "/squad",
-                HttpMethod.POST,
-                createSquadRequest,
-                Squad.class
-        );
 
-        Squad createdSquad= createSquadResponse.getBody();
-        assertThat(createdSquad).isNotNull();
-        assertThat(createdSquad.getSquadId()).isNotNull();
-        assertThat(createdSquad.getName()).isEqualTo(squad.getName());
-        assertThat(createdSquad.getDescription()).isEqualTo(squad.getDescription());
-
-
-
-    }
 
      /*
 

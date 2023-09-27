@@ -44,7 +44,7 @@ public class SquadService {
 
     public void deleteSquad(long id) {
         Squad squad = getSquadById(id);
-        squadRepo.delete(squad);
+        squadRepo.deleteById(id);
 
     }
 
@@ -54,6 +54,7 @@ public class SquadService {
 
     }
 
+    @Transactional
     public Squad addDeveloperToSquad(Long squadId, Long developerId) {
         Squad squad = squadRepo.findById(squadId)
                 .orElseThrow(() -> new NotFoundException("Squad not found with id: " + squadId));
@@ -61,12 +62,12 @@ public class SquadService {
         Developer developer = developerRepo.findById(developerId)
                 .orElseThrow(() -> new NotFoundException("Developer not found with id" + developerId));
 
-        developer.setSquad(squad);
-        squad.getDevelopers().add(developer);
+        //developer.setSquad(squad);
+        //squad.getDevelopers().add(developer);
 
-        //squad.addDeveloper(developer);
+        squad.addDeveloper(developer);
 
-        developerRepo.save(developer);
+        //developerRepo.save(developer);
         return squadRepo.save(squad);
     }
 

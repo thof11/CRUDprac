@@ -11,9 +11,9 @@ import javax.transaction.Transactional;
 
 
 public interface SquadRepo extends JpaRepository<Squad, Long> {
-    @Transactional
-    @Modifying
-    @Query("DELETE FROM Developer d WHERE d.squad.id = :squadId AND d.id = :developerId")
-    void removeDeveloperFromSquad(@Param("squadId") Long squadId, @Param("developerId") Long developerId);
+   // @Transactional
+   // @Modifying
+    //@Query("DELETE FROM Developer d WHERE d.squad.id = :squadId AND d.id = :developerId")
+   // void removeDeveloperFromSquad(@Param("squadId") Long squadId, @Param("developerId") Long developerId);
 }
 
