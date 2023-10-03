@@ -6,9 +6,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.Objects;
 
 @Entity
-//@EqualsAndHashCode
 @Getter
 @Setter
 public class Developer {
@@ -33,4 +33,17 @@ public class Developer {
     @JoinColumn(name = "squad_id")
     @JsonIgnore
     private Squad squad;
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Developer developer) {
+            return Objects.equals(developer.developerId, this.developerId);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.developerId);
+    }
 }

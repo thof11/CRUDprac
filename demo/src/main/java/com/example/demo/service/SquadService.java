@@ -17,7 +17,6 @@ import java.util.List;
 public class SquadService {
 
     private final SquadRepo squadRepo;
-
     private final DeveloperRepo developerRepo;
 
     public List<Squad> getAllSquads() {
@@ -38,20 +37,14 @@ public class SquadService {
         existingSquad.setName(squad.getName());
         existingSquad.setDescription(squad.getDescription());
         return squadRepo.save(existingSquad);
-
-
     }
 
     public void deleteSquad(long id) {
-        Squad squad = getSquadById(id);
         squadRepo.deleteById(id);
-
     }
 
     public void deleteAllSquads() {
-
         squadRepo.deleteAll();
-
     }
 
     @Transactional
@@ -62,12 +55,7 @@ public class SquadService {
         Developer developer = developerRepo.findById(developerId)
                 .orElseThrow(() -> new NotFoundException("Developer not found with id" + developerId));
 
-        //developer.setSquad(squad);
-        //squad.getDevelopers().add(developer);
-
         squad.addDeveloper(developer);
-
-        //developerRepo.save(developer);
         return squadRepo.save(squad);
     }
 

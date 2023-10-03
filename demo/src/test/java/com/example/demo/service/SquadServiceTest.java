@@ -1,10 +1,8 @@
 package com.example.demo.service;
 
 
-
 import com.example.demo.models.Developer;
 import com.example.demo.models.Squad;
-import com.example.demo.service.DeveloperService;
 import com.example.demo.repo.DeveloperRepo;
 import com.example.demo.repo.SquadRepo;
 import com.github.javafaker.Faker;
@@ -13,47 +11,180 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.junit.jupiter.api.Assertions;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
-import org.springframework.stereotype.Repository;
-import org.springframework.stereotype.Service;
-// import static org.assertj.core.api.Assertions.assertThat;
-
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class SquadServiceTest {
 
-    @Autowired
-    private DeveloperRepo developerRepo;
+    @MockBean
+    private DeveloperRepo devRepository;
+
+    @MockBean
+    private SquadRepo squadRepository;
 
     @Autowired
-    private SquadRepo squadRepo;
-
-    @Autowired
-    private TestRestTemplate restTemplate;
+    private SquadService squadService;
 
     @BeforeEach
     public void setup() {
-        // Clean up the database before each test
-        developerRepo.deleteAll();
-        squadRepo.deleteAll();
+        // Clean up the mocks before each test
+        Mockito.clearAllCaches();
+    }
+
+    @Test
+    public void testGetAllSquads() {
+        //GIVEN
+        Squad squad1 = generateRandomSquad();
+        Squad squad2 = generateRandomSquad();
+
+        List<Squad> squads = Arrays.asList(squad1, squad2);
+        when(squadRepository.findAll()).thenReturn(squads);
+
+        //WHEN
+        List<Squad> actualSquads = squadService.getAllSquads();
+
+        //THEN
+        assertEquals(squads, actualSquads);
+    }
+
+    @Test
+    public void testGetSquadById() {
+        //GIVEN
+        Squad squad = generateRandomSquad();
+        long squadId = squad.getSquadId();
+
+        when(squadRepository.findById(squadId)).thenReturn(Optional.of(squad));
+
+        //WHEN
+        Squad actualSquad = squadService.getSquadById(squadId);
+
+        //THEN
+        verify(squadRepository).findById(squadId);
+        assertEquals(squad, actualSquad);
+    }
+
+    @Test
+    public void testCreateSquad() {
+        //GIVEN
+        Squad squad = generateRandomSquad();
+        when(squadRepository.save(squad)).thenReturn(squad);
+
+        //WHEN
+        squadService.createSquad(squad);
+
+        //THEN
+        verify(squadRepository).save(squad);
+    }
+
+    @Test
+    public void testUpdateSquad() {
+        //GIVEN
+        Long squadId = 1L;
+        Squad squad = generateRandomSquad();
+        squad.setSquadId(squadId);
+
+        when(squadRepository.findById(squadId)).thenReturn(Optional.of(squad));
+        when(squadRepository.save(squad)).thenReturn(squad);
+
+        //WHEN
+        squadService.updateSquad(squadId, squad);
+
+        //THEN
+        verify(squadRepository).save(squad);
+        verify(squadRepository).findById(squadId);
+    }
+
+    @Test
+    public void testDeleteSquad() {
+        //GIVEN
+        Squad squad = generateRandomSquad();
+        Long squadId = squad.getSquadId();
+
+        doNothing().when(squadRepository).deleteById((squadId));
+
+        //WHEN
+        squadService.deleteSquad(squadId);
+
+        //THEN
+        verify(squadRepository).deleteById(squadId);
+    }
+
+    @Test
+    public void testDeleteAllSquads() {
+        //WHEN
+        squadService.deleteAllSquads();
+
+        //THEN
+        verify(squadRepository).deleteAll();
+    }
+
+    @Test
+    public void testAddDeveloperToSquad() {
+        //GIVEN
+        Squad squad = generateRandomSquad();
+        Developer developer = generateRandomDeveloper();
+
+        Long squadId = squad.getSquadId();
+        Long developerId = developer.getDeveloperId();
+
+        when(squadRepository.save(squad)).thenReturn(squad);
+        when(squadRepository.findById(squadId)).thenReturn(Optional.of(squad));
+        when(devRepository.findById(developerId)).thenReturn(Optional.of(developer));
+
+        //WHEN
+        Squad squadWithDeveloper = squadService.addDeveloperToSquad(squadId, developerId);
+
+        //THEN
+        assertThat(squadWithDeveloper).isNotNull();
+        assertThat(squadWithDeveloper.getDevelopers())
+                .isNotNull()
+                .asList()
+                .hasSize(1)
+                .contains(developer);
+        assertThat(developer).isNotNull();
+        assertThat(developer.getSquad()).isNotNull();
+
+        verify(squadRepository).findById(squadId);
+        verify(devRepository).findById(developerId);
+        verify(squadRepository).save(squad);
+    }
+
+    @Test
+    public void testRemoveDeveloperToSquad() {
+        //GIVEN
+        Squad squad = generateRandomSquad();
+        Developer developer = generateRandomDeveloper();
+
+        Long squadId = squad.getSquadId();
+        Long developerId = developer.getDeveloperId();
+        squad.addDeveloper(developer);
+
+        when(squadRepository.save(squad)).thenReturn(squad);
+        when(squadRepository.findById(squadId)).thenReturn(Optional.of(squad));
+        when(devRepository.findById(developerId)).thenReturn(Optional.of(developer));
+
+        //WHEN
+        Squad squadWithoutDeveloper = squadService.removeDeveloperFromSquad(squadId, developerId);
+
+        //THEN
+        assertThat(squadWithoutDeveloper).isNotNull();
+        assertThat(squadWithoutDeveloper.getDevelopers())
+                .asList()
+                .hasSize(0);
+
+        verify(squadRepository).findById(squadId);
+        verify(devRepository).findById(developerId);
+        verify(squadRepository).save(squad);
     }
 
     private Developer generateRandomDeveloper() {
@@ -75,265 +206,7 @@ public class SquadServiceTest {
 
         long randomId = Faker.instance().number().numberBetween(minId, maxId);
         squad.setSquadId(randomId);
-
         return squad;
-
     }
-
-    @Test
-    public void testGetAllSquads(){
-        //GIVEN
-        Squad squad1 = generateRandomSquad();
-        Squad squad2 = generateRandomSquad();
-
-        List<Squad> squads= Arrays.asList(
-                squad1,squad2
-        );
-
-        SquadRepo squadRepository = Mockito.mock(SquadRepo.class);
-        DeveloperRepo devRepository=Mockito.mock(DeveloperRepo.class);
-        Mockito.when(squadRepository.findAll()).thenReturn(squads);
-
-
-        DeveloperService devService= new DeveloperService(devRepository);
-        SquadService service= new SquadService(squadRepository,devRepository);
-
-
-
-        //WHEN
-        List<Squad> actualSquads= service.getAllSquads();
-
-        //THEN
-        assertEquals(squads, actualSquads);
-
-    }
-
-    @Test
-    public void testGetSquadById(){
-        //GIVEN
-        Squad squad1 = generateRandomSquad();
-        long squadId = squad1.getSquadId();
-
-
-
-        SquadRepo squadRepository = Mockito.mock(SquadRepo.class);
-        DeveloperRepo devRepository=Mockito.mock(DeveloperRepo.class);
-        Mockito.when(squadRepository.findById(squadId)).thenReturn(Optional.of(squad1));
-
-
-        DeveloperService devService= new DeveloperService(devRepository);
-        SquadService service= new SquadService(squadRepository,devRepository);
-
-
-
-        //WHEN
-        Squad actualSquad= service.getSquadById(squadId);
-
-        //THEN
-        Mockito.verify(squadRepository).findById(squadId);
-        assertEquals(squad1, actualSquad);
-
-    }
-
-    @Test
-    public void testCreateSquad(){
-        //GIVEN
-        Squad squad1 = generateRandomSquad();
-
-
-
-
-        SquadRepo squadRepository = Mockito.mock(SquadRepo.class);
-        DeveloperRepo devRepository=Mockito.mock(DeveloperRepo.class);
-        Mockito.when(squadRepository.save(squad1)).thenReturn(squad1);
-
-
-        DeveloperService devService= new DeveloperService(devRepository);
-        SquadService service= new SquadService(squadRepository,devRepository);
-
-
-
-        //WHEN
-        service.createSquad(squad1);
-
-        //THEN
-        Mockito.verify(squadRepository).save(squad1);
-
-
-    }
-
-    @Test
-    public void testUpdateSquad(){
-        //GIVEN
-        Long squadId = 1L;
-        Squad squad1 = generateRandomSquad();
-        squad1.setSquadId(squadId);
-
-
-
-
-        SquadRepo squadRepository = Mockito.mock(SquadRepo.class);
-        DeveloperRepo devRepository=Mockito.mock(DeveloperRepo.class);
-        Mockito.when(squadRepository.findById(squadId)).thenReturn(Optional.of(squad1));
-        Mockito.when(squadRepository.save(squad1)).thenReturn(squad1);
-
-
-        DeveloperService devService= new DeveloperService(devRepository);
-        SquadService service= new SquadService(squadRepository,devRepository);
-
-
-
-        //WHEN
-        service.updateSquad(squadId, squad1);
-
-        //THEN
-        Mockito.verify(squadRepository).save(squad1);
-        Mockito.verify(squadRepository).findById(squadId);
-
-
-    }
-
-    @Test
-    public void testDeleteSquad(){
-        //GIVEN
-
-        Squad squad1 = generateRandomSquad();
-        Long squadId = squad1.getSquadId();
-
-
-
-
-        SquadRepo squadRepository = Mockito.mock(SquadRepo.class);
-        DeveloperRepo devRepository=Mockito.mock(DeveloperRepo.class);
-        Mockito.when(squadRepository.findById(squadId)).thenReturn(Optional.of(squad1));
-        Mockito.doNothing().when(squadRepository).deleteById((squadId));
-
-
-        DeveloperService devService= new DeveloperService(devRepository);
-        SquadService service= new SquadService(squadRepository,devRepository);
-
-
-
-        //WHEN
-        service.deleteSquad(squadId);
-
-        //THEN
-        Mockito.verify(squadRepository).findById(squadId);
-        Mockito.verify(squadRepository).deleteById(squadId);
-
-
-    }
-
-    @Test
-    public void testDeleteAllSquads(){
-        //GIVEN
-
-        Squad squad1 = generateRandomSquad();
-        Squad squad2 = generateRandomSquad();
-
-        List<Squad> squads = Arrays.asList( squad1, squad2);
-
-
-
-
-        SquadRepo squadRepository = Mockito.mock(SquadRepo.class);
-        DeveloperRepo devRepository=Mockito.mock(DeveloperRepo.class);
-        Mockito.when(squadRepository.findAll()).thenReturn((squads));
-
-
-
-        DeveloperService devService= new DeveloperService(devRepository);
-        SquadService service= new SquadService(squadRepository,devRepository);
-
-
-
-        //WHEN
-        service.deleteAllSquads();
-
-        //THEN
-        Mockito.verify(squadRepository).deleteAll();
-
-
-    }
-
-    @Test
-    public void testAddDeveloperToSquad(){
-        //GIVEN
-
-        Squad squad1 = generateRandomSquad();
-        Developer developer1= generateRandomDeveloper();
-
-        Long squadId= squad1.getSquadId();
-        Long developerId= developer1.getDeveloperId();
-
-
-
-        SquadRepo squadRepository = Mockito.mock(SquadRepo.class);
-        DeveloperRepo devRepository=Mockito.mock(DeveloperRepo.class);
-        Mockito.when(squadRepository.findById(squadId)).thenReturn(Optional.of(squad1));
-        Mockito.when(devRepository.findById(developerId)).thenReturn(Optional.of(developer1));
-
-
-        DeveloperService devService= new DeveloperService(devRepository);
-        SquadService service= new SquadService(squadRepository,devRepository);
-
-
-
-        //WHEN
-        service.addDeveloperToSquad(squadId, developerId);
-
-        //THEN
-        Mockito.verify(squadRepository).findById(squadId);
-        Mockito.verify(devRepository).findById(developerId);
-        Mockito.verify(squadRepository).save(squad1);
-        assertThat(squad1).isNotNull();
-        // discuss assertThat(squad1.getDeveloperId()).isEqualTo(developer1.getDeveloperId());
-
-
-    }
-
-    @Test
-    public void testRemoveDeveloperToSquad(){
-        //GIVEN
-
-        Squad squad1 = generateRandomSquad();
-        Developer developer1= generateRandomDeveloper();
-
-        Long squadId= squad1.getSquadId();
-        Long developerId= developer1.getDeveloperId();
-
-        squad1.addDeveloper(developer1);
-
-        SquadRepo squadRepository = Mockito.mock(SquadRepo.class);
-        DeveloperRepo devRepository=Mockito.mock(DeveloperRepo.class);
-        Mockito.when(squadRepository.findById(squadId)).thenReturn(Optional.of(squad1));
-        Mockito.when(devRepository.findById(developerId)).thenReturn(Optional.of(developer1));
-
-
-        DeveloperService devService= new DeveloperService(devRepository);
-        SquadService service= new SquadService(squadRepository,devRepository);
-
-
-
-        //WHEN
-        service.removeDeveloperFromSquad(squadId, developerId);
-
-        //THEN
-        Mockito.verify(squadRepository).findById(squadId);
-        Mockito.verify(devRepository).findById(developerId);
-        Mockito.verify(squadRepository).save(squad1);
-
-
-
-    }
-
-
-
-
-
-
-
-
-
 
 }

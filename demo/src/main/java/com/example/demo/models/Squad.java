@@ -1,15 +1,19 @@
 package com.example.demo.models;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
-
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-@EqualsAndHashCode
 @Entity
 @Getter
 @Setter
@@ -19,7 +23,6 @@ public class Squad {
     @Column(name = "id")
     private Long squadId;
 
-    // Add more fields here: name, description and etc
     @Column
     private String name;
 
@@ -27,7 +30,6 @@ public class Squad {
     private String description;
 
     @OneToMany(mappedBy = "squad", cascade = CascadeType.ALL)
-    //@JoinColumn(name = "developers")
     private List<Developer> developers;
 
     public void addDeveloper(Developer developer) {
@@ -43,7 +45,18 @@ public class Squad {
             developers.remove(developer);
             developer.setSquad(null);
         }
+    }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Squad squad) {
+            return Objects.equals(squad.getSquadId(), this.squadId);
+        }
+        return false;
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.squadId);
     }
 }
