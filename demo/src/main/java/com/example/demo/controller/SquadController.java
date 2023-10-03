@@ -67,7 +67,7 @@ public class SquadController {
     }
 
     @DeleteMapping("{squadId}/developers/{developerId}")
-    public ResponseEntity<Void> deleteSquad(@PathVariable Long squadId, @PathVariable Long developerId) {
+    public ResponseEntity<Void> removeDeveloperFromSquad(@PathVariable Long squadId, @PathVariable Long developerId) {
         squadService.removeDeveloperFromSquad(squadId, developerId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
