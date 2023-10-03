@@ -1,59 +1,140 @@
 package com.example.demo.service;
 
 import com.example.demo.models.Developer;
-import com.example.demo.models.Squad;
-import com.example.demo.service.DeveloperService;
 import com.example.demo.repo.DeveloperRepo;
-import com.example.demo.repo.SquadRepo;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.junit.jupiter.api.Assertions;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
-import org.springframework.stereotype.Repository;
-import org.springframework.stereotype.Service;
-// import static org.assertj.core.api.Assertions.assertThat;
-
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Logger;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DeveloperServiceTest {
 
-
-    @Autowired
+    @MockBean
     private DeveloperRepo developerRepo;
 
+    // SquadRepo is not required here because it is not dependency of DeveloperService
     @Autowired
-    private SquadRepo squadRepo;
-
-    @Autowired
-    private TestRestTemplate restTemplate;
+    private DeveloperService developerService;
 
     @BeforeEach
     public void setup() {
-        // Clean up the database before each test
-        developerRepo.deleteAll();
-        squadRepo.deleteAll();
+        // Clean up the mock before each test
+        Mockito.reset(developerRepo);
+    }
+
+    @Test
+    public void testGetAllDevelopers() {
+        //GIVEN
+        Developer developer1 = generateRandomDeveloper();
+        Developer developer2 = generateRandomDeveloper();
+        List<Developer> developers = Arrays.asList(developer1, developer2);
+
+        when(developerRepo.findAll()).thenReturn(developers);
+
+
+        //WHEN
+        List<Developer> actualDevelopers = developerService.getAllDevelopers();
+
+        //THEN
+        assertEquals(developers, actualDevelopers);
+
+    }
+
+    @Test
+    public void testGetDeveloperById() {
+        //GIVEN
+        Developer developer = generateRandomDeveloper();
+        when(developerRepo.findById(developer.getDeveloperId()))
+                .thenReturn(Optional.of(developer));
+
+        //WHEN
+        Developer actualDeveloper = developerService.getDeveloperById(developer.getDeveloperId());
+
+        //THEN
+        assertEquals(developer, actualDeveloper);
+    }
+
+    @Test
+    public void testCreateDeveloper() {
+        //GIVEN
+
+        //This test has nothing to do with findById logic, hence you don't need to mock it
+
+        Developer developer = generateRandomDeveloper();
+
+        when(developerRepo.save(developer))
+                .thenReturn(developer);
+
+        //WHEN
+        //Since this test validates createDeveloper method you need to check return result of this method
+        Developer actualDeveloper = developerService.createDeveloper(developer);
+
+
+        //THEN
+        verify(developerRepo).save(developer);
+        assertEquals(developer, actualDeveloper);
+    }
+
+    @Test
+    public void testUpdateDeveloper() {
+        //GIVEN
+        Developer developer = generateRandomDeveloper();
+        developer.setFirstName("Jack");
+
+        when(developerRepo.save(developer)).thenReturn(developer);
+        when(developerRepo.findById(developer.getDeveloperId())).thenReturn(Optional.of(developer));
+
+
+        //WHEN
+        //Since this test validates updateDeveloper method you need to check return result of this method
+        Developer actualDeveloper = developerService.updateDeveloper(developer.getDeveloperId(), developer);
+
+        //THEN
+        verify(developerRepo).save(developer);
+        assertEquals(developer, actualDeveloper);
+    }
+
+    @Test
+    public void testDeleteDeveloper() {
+        //GIVEN
+        Developer developer = generateRandomDeveloper();
+        long developerId = developer.getDeveloperId();
+
+        doNothing()
+                .when(developerRepo)
+                .deleteById(developerId);
+
+        //WHEN
+        developerService.deleteDeveloper(developerId);
+
+        //THEN
+        verify(developerRepo).deleteById(developerId);
+    }
+
+    @Test
+    public void testDeleteAllDevelopers() {
+        // You don't need to have GIVEN block here because you verify that all developers are deleted and
+        // there is no return value
+
+        // WHEN
+        developerService.deleteAllDevelopers();
+
+        // THEN
+        verify(developerRepo).deleteAll();
     }
 
     private Developer generateRandomDeveloper() {
@@ -64,174 +145,6 @@ public class DeveloperServiceTest {
         developer.setDeveloperId(Faker.instance().number().randomDigit());
         return developer;
     }
-
-    @Test
-    public void testGetAllDevelopers(){
-
-        //GIVEN
-        Developer developer1 = generateRandomDeveloper();
-        Developer developer2 = generateRandomDeveloper();
-
-        List<Developer> developers= Arrays.asList(
-                developer1,developer2
-        );
-
-        DeveloperRepo repository = Mockito.mock(DeveloperRepo.class);
-        Mockito.when(repository.findAll()).thenReturn(developers);
-
-        DeveloperService service= new DeveloperService(repository);
-
-
-        //WHEN
-        List<Developer> actualDevelopers = service.getAllDevelopers();
-
-        //THEN
-        assertEquals(developers, actualDevelopers);
-
-    }
-
-    @Test
-    public void testGetDeveloperById() {
-
-        //GIVEN
-        Developer developer1 = generateRandomDeveloper();
-
-        DeveloperRepo repository=Mockito.mock(DeveloperRepo.class);
-        Mockito.when(repository.findById(developer1.getDeveloperId())).thenReturn(Optional.of(developer1));
-
-        DeveloperService service= new DeveloperService(repository);
-
-        //WHEN
-        Developer actualDeveloper = service.getDeveloperById(developer1.getDeveloperId());
-
-        //THEN
-        assertEquals(developer1, actualDeveloper);
-
-
-
-
-
-
-    }
-
-    @Test
-    public void testCreateDeveloper() {
-
-        //GIVEN
-        Developer developer1 = generateRandomDeveloper();
-
-        DeveloperRepo repository=Mockito.mock(DeveloperRepo.class);
-        DeveloperService service= new DeveloperService(repository);
-
-        Mockito.when(repository.save(developer1)).thenReturn(developer1);
-        Mockito.when(repository.findById(developer1.getDeveloperId())).thenReturn(Optional.of(developer1));
-
-
-
-        //WHEN
-        service.createDeveloper(developer1);
-        Developer actualDeveloper = service.getDeveloperById(developer1.getDeveloperId());
-
-
-        //THEN
-        Mockito.verify(repository).save(developer1);
-        assertEquals(developer1, actualDeveloper);
-
-
-    }
-
-    @Test
-    public void testUpdateDeveloper() {
-
-        //GIVEN
-        Developer developer1 = generateRandomDeveloper();
-        developer1.setFirstName("Jack");
-
-        DeveloperRepo repository=Mockito.mock(DeveloperRepo.class);
-        DeveloperService service= new DeveloperService(repository);
-
-        Mockito.when(repository.save(developer1)).thenReturn(developer1);
-        Mockito.when(repository.findById(developer1.getDeveloperId())).thenReturn(Optional.of(developer1));
-
-
-
-        //WHEN
-        service.updateDeveloper(developer1.getDeveloperId(), developer1);
-        Developer actualDeveloper = service.getDeveloperById(developer1.getDeveloperId());
-
-
-        //THEN
-        Mockito.verify(repository).save(developer1);
-        assertEquals(developer1, actualDeveloper);
-
-
-    }
-
-    @Test
-    public void testDeleteDeveloper() {
-
-        //GIVEN
-        Developer developer1 = generateRandomDeveloper();
-        long developer1Id= developer1.getDeveloperId();
-
-
-
-        DeveloperRepo repository=Mockito.mock(DeveloperRepo.class);
-        DeveloperService service= new DeveloperService(repository);
-
-
-        Mockito.when(repository.findById(developer1Id)).thenReturn(Optional.of(developer1));
-        Mockito.doNothing().when(repository).deleteById(developer1Id);
-
-
-
-        //WHEN
-        service.deleteDeveloper(developer1Id);
-
-
-
-        //THEN
-        Mockito.verify(repository).deleteById(developer1Id);
-
-
-
-    }
-
-    @Test
-    public void testDeleteAllDevelopers() {
-
-        //GIVEN
-        Developer developer1 = generateRandomDeveloper();
-        Developer developer2 = generateRandomDeveloper();
-
-        List<Developer> developers= Arrays.asList(
-                developer1,developer2
-        );
-
-
-
-        DeveloperRepo repository=Mockito.mock(DeveloperRepo.class);
-        DeveloperService service= new DeveloperService(repository);
-
-
-        Mockito.when(repository.findAll()).thenReturn(developers);
-        //Mockito.doNothing().when(repository).deleteById(developer1Id);
-
-
-
-
-        // WHEN
-        service.deleteAllDevelopers();
-
-        // THEN
-        Mockito.verify(repository).deleteAll();
-
-
-
-    }
-
-
-
 
 }
 

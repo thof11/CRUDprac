@@ -14,18 +14,15 @@ public class DeveloperService {
     private final DeveloperRepo developerRepo;
 
     public List<Developer> getAllDevelopers() {
-
         return developerRepo.findAll();
     }
 
     public Developer getDeveloperById(long developerId) {
         return developerRepo.findById(developerId)
                 .orElseThrow(() -> new NotFoundException("User not found with id: " + developerId));
-
     }
 
     public Developer createDeveloper(Developer developer) {
-
         return developerRepo.save(developer);
     }
 
@@ -38,7 +35,6 @@ public class DeveloperService {
     }
 
     public void deleteDeveloper(long developerId) {
-
         developerRepo.deleteById(developerId);
     }
 
