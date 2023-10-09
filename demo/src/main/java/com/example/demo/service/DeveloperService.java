@@ -5,7 +5,6 @@ import com.example.demo.models.Developer;
 import com.example.demo.repo.DeveloperRepo;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Service
@@ -18,32 +17,28 @@ public class DeveloperService {
         return developerRepo.findAll();
     }
 
-    public Developer getDeveloperById(long id) {
-        return developerRepo.findById(id)
-                .orElseThrow(() -> new NotFoundException("User not found with id: " + id));
+    public Developer getDeveloperById(long developerId) {
+        return developerRepo.findById(developerId)
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + developerId));
     }
 
     public Developer createDeveloper(Developer developer) {
         return developerRepo.save(developer);
     }
 
-    public Developer updateDeveloper(long id, Developer developer) {
-        Developer existingDeveloper = getDeveloperById(id);
+    public Developer updateDeveloper(long developerId, Developer developer) {
+        Developer existingDeveloper = getDeveloperById(developerId);
         existingDeveloper.setFirstName(developer.getFirstName());
         existingDeveloper.setLastName(developer.getLastName());
         existingDeveloper.setAge(developer.getAge());
         return developerRepo.save(existingDeveloper);
     }
 
-    public void deleteDeveloper(long id) {
-        Developer developer = getDeveloperById(id);
-        developerRepo.delete(developer);
+    public void deleteDeveloper(long developerId) {
+        developerRepo.deleteById(developerId);
     }
 
-    public List<Developer> deleteAllDevelopers() {
+    public void deleteAllDevelopers() {
         developerRepo.deleteAll();
-
-        return null;
-
     }
 }

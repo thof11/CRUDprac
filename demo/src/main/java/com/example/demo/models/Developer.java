@@ -1,14 +1,12 @@
 package com.example.demo.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
+import java.util.Objects;
 
 @Entity
 @Getter
@@ -17,7 +15,7 @@ public class Developer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private long developerId;
 
     @Column
     private String firstName;
@@ -29,8 +27,23 @@ public class Developer {
     private int age;
 
     @Column
-    private String Occupation;
+    private String occupation;
 
     @ManyToOne // pass arguments to that annotation
+    @JoinColumn(name = "squad_id")
+    @JsonIgnore
     private Squad squad;
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Developer developer) {
+            return Objects.equals(developer.developerId, this.developerId);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.developerId);
+    }
 }
